@@ -43,7 +43,7 @@ extern "C" void appendImage(uint8_t* binaryJPEG, int length)
     RGBA src(srcImage.data, srcImage.cols, srcImage.rows);
     RGBA dst(dstImage.data, dstImage.cols, dstImage.rows);
 
-    for(int i = 0; i <= 10; i++) {
+    for(int i = 0; i <= 100; i++) {
         viewerQuery(src, dst, width, height, pi / 2, i / 255.0);
         cv::cvtColor(dstImage, YUV, cv::COLOR_BGR2YUV_I420);
         writer->writeFrame(YUV.data);
