@@ -1,0 +1,65 @@
+
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Bootstrap demo</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-iYQeCzEYFbKjA/T2uDLTpkwGzCiq6soy8tYaI1GyVh/UjpbCx/TYkiZhlZB6+fzT" crossorigin="anonymous">
+  </head>
+  <body>
+    <div class="container">
+        <div class="mb-3">
+            <label for="inputFiles" class="form-label">Small file input example</label>
+            <input class="form-control form-control-sm" id="inputFiles" type="file" multiple>
+        </div>
+        <p id="status">Downloading binary...</p>
+    </div>
+    
+    <script src="out.js"></script>
+    <script>
+        const inputFiles = document.getElementById("inputFiles");
+        VideoWriter().then(wasm => {
+            const status = document.getElementById("status");
+            status.innerText = 'Ready';
+            inputFiles.onchange = async () => {
+
+                wasm._initWriter(1920, 1080);
+
+                const total = inputFiles.files.length;
+
+                let count = 1;
+                for (const file of inputFiles.files) {
+
+                    status.innerText = `Rendering file ${file.name}, ${count++}/${total}...`;
+                    const binaryJPEG = new Uint8Array(await file.arrayBuffer());
+                    const bufferPtr = wasm._malloc(binaryJPEG.length);
+                    wasm.HEAPU8.set(binaryJPEG, bufferPtr);
+                    wasm._appendImage(bufferPtr, binaryJPEG.byteLength);
+                    wasm._free(bufferPtr);
+                    console.log(file);
+                }
+
+                
+                status.innerText = `Done.`;
+
+                wasm._finalize();
+                
+                const objectURL = URL.createObjectURL(new Blob([wasm.FS.readFile("output.h264")]));
+
+                const a = document.createElement('a');
+
+                a.download = "test.h264";
+                a.href = objectURL;
+                a.click();
+
+                URL.revokeObjectURL(objectURL);
+            }
+
+        })
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-u1OknCvxWvY5kfmNBILK2hRnQC3Pr17a+RTT6rIHI7NnikvbZlHgTPOOmMi466C8" crossorigin="anonymous"></script>
+  </body>
+</html>
